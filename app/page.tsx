@@ -10,7 +10,7 @@ Amplify.configure(outputs);
 
 export default function App() {
   return (
-    <Authenticator>
+    <Authenticator hideSignUp>
       {({ signOut, user }) => (
         <main>
           <h1>Hello {user?.username}</h1>
