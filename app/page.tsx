@@ -1,39 +1,23 @@
-import React from 'react';
-import Amplify from 'aws-amplify';
-import { AmplifyAuthenticator, AmplifySignUp, AmplifySignOut } from '@aws-amplify/ui-react';
-import { AuthState, onAuthUIStateChange } from '@aws-amplify/ui-components';
-import awsconfig from './aws-exports';
+'use client';
 
-Amplify.configure(awsconfig);
+import type { AppProps } from 'next/app';
+import { Authenticator } from '@aws-amplify/ui-react';
+import { Amplify } from 'aws-amplify';
+import outputs from '@/amplify_outputs.json';
+import '@aws-amplify/ui-react/styles.css';
 
-const App = () => {
-    const [authState, setAuthState] = React.useState();
-    const [user, setUser] = React.useState();
+Amplify.configure(outputs);
 
-    React.useEffect(() => {
-        return onAuthUIStateChange((nextAuthState, authData) => {
-            setAuthState(nextAuthState);
-            setUser(authData)
-        });
-    }, []);
-
-  return authState === AuthState.SignedIn && user ? (
-      <div className="App">
-          <div>Hello, {user.username}</div>
-          <AmplifySignOut />
-      </div>
-    ) : (
-      <AmplifyAuthenticator>
-        <AmplifySignUp
-          slot="sign-up"
-          formFields={[
-            { type: "username" },
-            { type: "password" },
-            { type: "email" }
-          ]}
-        />
-      </AmplifyAuthenticator>
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <Authenticator>
+      {({ signOut, user }) => (
+        <main>
+          <h1>Hello {user?.username}</h1>
+          <button onClick={signOut}>Sign out</button>
+          <Component {...pageProps} />
+        </main>
+      )}
+    </Authenticator>
   );
-}
-
-export default App;
+};
