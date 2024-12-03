@@ -5,9 +5,9 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import { Amplify } from 'aws-amplify';
 import outputs from '@/amplify_outputs.json';
 import '@aws-amplify/ui-react/styles.css';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { Lambda } from 'aws-sdk';
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 
 Amplify.configure(outputs);
 
@@ -17,20 +17,21 @@ export default function App() {
   const sendRequest = useCallback(async () => {
     const { credentials } = await fetchAuthSession();
     console.log(JSON.stringify(credentials));
-    const lambda = new Lambda({
+    const lambda = new LambdaClient({
       credentials,
       region: 'ap-northeast-1'
     });
-    lambda.invoke({
-      FunctionName: 'fetch-status'
-    }, function (err, data) {
-      if (err) {
-        console.error(err);
-        setStatus('Error');
-        return;
+    try {
+      const res = await lambda.send(new InvokeCommand({
+        FunctionName: 'fetch-status'
+      }));
+      if (res?.Payload) {
+        setStatus(Buffer.from(res.Payload).toString());
       }
-      setStatus(data.Payload as string);
-    });
+    } catch (error) {
+      console.error(error);
+      setStatus('Error');
+    }
   }, []);
 
   const onClick = useCallback(() => {
